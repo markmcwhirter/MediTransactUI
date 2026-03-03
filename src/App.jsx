@@ -1,16 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import AddPatientPage from './Patient/AddPatientPage'
-import LoginPage from './LoginPage'
-import { useAuth } from './auth/AuthContext'
-import AppointmentMaintenancePage from './Appointment/AppointmentMaintenancePage'
-import BillingMaintenancePage from './Billing/BillingMaintenancePage'
-import TenantMaintenancePage from './Administration/TenantMaintenancePage'
-import TenantLocationMaintenancePage from './Administration/TenantLocationMaintenancePage'
-import InsuranceMaintenancePage from './Administration/InsuranceMaintenancePage'
-import ProviderMaintenancePage from './Administration/ProviderMaintenancePage'
-import UserMaintenancePage from './Administration/UserMaintenancePage'
-import Icd10MaintenancePage from './Administration/Icd10MaintenancePage'
-import CptMaintenancePage from './Administration/CptMaintenancePage'
 
 const appointments = [
   { time: '08:30 AM', patient: 'Mia Richardson', reason: 'Annual Physical', provider: 'Dr. Patel', status: 'Checked In' },
@@ -31,7 +19,7 @@ const revenue = [
   { label: 'Outstanding A/R', value: '$47,120', trend: '-4.6%' }
 ]
 
-const mainMenu = ['Dashboard', 'Appointments', 'Billing', 'Clinical Notes', 'Reports', 'Intake']
+const mainMenu = ['Dashboard', 'Appointments', 'Billing', 'Clinical Notes', 'Reports', 'Intake', 'Administration']
 
 function StatusPill({ status }) {
   const map = {
@@ -44,15 +32,68 @@ function StatusPill({ status }) {
   return <span className={map[status] ?? 'pill neutral'}>{status}</span>
 }
 
+function AddPatientPage() {
+  return (
+    <article className="card patient-form-card" id="add-patient">
+      <div className="section-head">
+        <h3>Add New Patient</h3>
+        <a href="#">Patient Intake Guide</a>
+      </div>
+      <form className="patient-form">
+        <label>
+          First Name
+          <input type="text" name="firstName" placeholder="Enter first name" />
+        </label>
+        <label>
+          Last Name
+          <input type="text" name="lastName" placeholder="Enter last name" />
+        </label>
+        <label>
+          Date of Birth
+          <input type="date" name="dob" />
+        </label>
+        <label>
+          Phone Number
+          <input type="tel" name="phone" placeholder="(555) 123-4567" />
+        </label>
+        <label>
+          Insurance Provider
+          <div className="insurance-row">
+            <select name="insurance" defaultValue="">
+              <option value="" disabled>Select insurance provider</option>
+              <option value="aetna">Aetna</option>
+              <option value="anthem">Anthem Blue Cross</option>
+              <option value="cigna">Cigna</option>
+              <option value="medicare">Medicare</option>
+              <option value="uhc">UnitedHealthcare</option>
+            </select>
+            <button type="button" className="secondary add-insurance">+ Add Insurance</button>
+          </div>
+        </label>
+        <label>
+          Primary Physician
+          <input type="text" name="physician" placeholder="Assigned physician" />
+        </label>
+        <div className="patient-actions">
+          <button type="button">Save Patient</button>
+          <button type="button" className="secondary">Save & Add Another</button>
+        </div>
+      </form>
+    </article>
+  )
+}
+
 function App() {
-  const { claims, isAuthenticated, logout } = useAuth()
   const [hotkeyMessage, setHotkeyMessage] = useState('Ready')
   const [activePage, setActivePage] = useState('dashboard')
   const addAppointmentButtonRef = useRef(null)
 
   useEffect(() => {
     const handleHotkeys = (event) => {
-      if (!event.altKey || event.ctrlKey || event.metaKey) return
+      if (!event.altKey || event.ctrlKey || event.metaKey) {
+        return
+      }
+
       const key = event.key.toLowerCase()
 
       if (key === 'i') {
@@ -72,117 +113,76 @@ function App() {
     return () => window.removeEventListener('keydown', handleHotkeys)
   }, [])
 
-  if (!isAuthenticated) {
-    return <LoginPage />
-  }
-
   return (
     <div className="app-shell">
       <header className="app-header">
         <div className="header-top">
           <div>
-            <p className="muted">Good morning, {claims.name}</p>
+            <p className="muted">Good morning, Dr. Patel</p>
             <h1>MediTransact · Medical Office Portal</h1>
             <p className="hotkey-hint">Hotkeys: Alt+I (Intake), Alt+A (New Appointment) · {hotkeyMessage}</p>
           </div>
           <div className="header-actions">
             <span className="clinic-chip">Downtown Family Medicine · Open until 6:00 PM</span>
-            <button ref={addAppointmentButtonRef} type="button" onClick={() => setHotkeyMessage('New appointment workflow opened')}>
+            <button
+              ref={addAppointmentButtonRef}
+              type="button"
+              onClick={() => setHotkeyMessage('New appointment workflow opened')}
+            >
               + Add Appointment
             </button>
           </div>
         </div>
 
-        <div className="header-bottom">
-          <nav className="header-menu" aria-label="Primary">
-            <div className="menu-links">
-              <a
-                href="#"
-                className={activePage === 'dashboard' ? 'active' : ''}
-                onClick={(event) => {
-                  event.preventDefault()
-                  setActivePage('dashboard')
-                }}
+        <nav className="header-menu" aria-label="Primary">
+          <div className="menu-links">
+            <a
+              href="#"
+              className={activePage === 'dashboard' ? 'active' : ''}
+              onClick={(event) => {
+                event.preventDefault()
+                setActivePage('dashboard')
+              }}
+            >
+              Dashboard
+            </a>
+
+            <div className="menu-dropdown" role="menuitem" aria-haspopup="true">
+              <button
+                type="button"
+                className={activePage.startsWith('patient') ? 'active' : ''}
+                onClick={() => setActivePage('patient-add')}
               >
-                Dashboard
-              </a>
-
-              <div className="menu-dropdown" role="menuitem" aria-haspopup="true">
-                <button type="button" className={activePage.startsWith('patient') ? 'active' : ''} onClick={() => setActivePage('patient-add')}>
-                  Patients ▾
-                </button>
-                <div className="dropdown-menu">
-                  <button type="button" onClick={() => setActivePage('patient-add')}>Add Patient</button>
-                  <button type="button" onClick={() => setActivePage('patient-modify')}>Modify Patient</button>
-                  <button type="button" onClick={() => setActivePage('patient-delete')}>Delete Patient</button>
-                </div>
+                Patients ▾
+              </button>
+              <div className="dropdown-menu">
+                <button type="button" onClick={() => setActivePage('patient-add')}>Add Patient</button>
+                <button type="button" onClick={() => setActivePage('patient-modify')}>Modify Patient</button>
               </div>
-
-              <div className="menu-dropdown" role="menuitem" aria-haspopup="true">
-                <button type="button" className={activePage.startsWith('admin-') ? 'active' : ''} onClick={() => setActivePage('admin-tenants')}>
-                  Administration ▾
-                </button>
-                <div className="dropdown-menu">
-                  <button type="button" onClick={() => setActivePage('admin-tenants')}>Maintain Tenants</button>
-                  <button type="button" onClick={() => setActivePage('admin-tenant-locations')}>Maintain Tenant Locations</button>
-                  <button type="button" onClick={() => setActivePage('admin-insurance')}>Insurance Maintenance</button>
-                  <button type="button" onClick={() => setActivePage('admin-providers')}>Provider Maintenance</button>
-                  <button type="button" onClick={() => setActivePage('admin-users')}>User Maintenance</button>
-                  <button type="button" onClick={() => setActivePage('admin-icd10')}>ICD-10 Maintenance</button>
-                  <button type="button" onClick={() => setActivePage('admin-cpt')}>CPT Maintenance</button>
-                </div>
-              </div>
-
-              {mainMenu.map((item) => (
-                <a
-                  key={item}
-                  href={item === 'Intake' ? '#intake' : '#'}
-                  onClick={(event) => {
-                    if (item === 'Appointments') {
-                      event.preventDefault()
-                      setActivePage('appointments-maintenance')
-                    }
-                    if (item === 'Billing') {
-                      event.preventDefault()
-                      setActivePage('billing-maintenance')
-                    }
-                  }}
-                >
-                  {item}
-                </a>
-              ))}
             </div>
-            <button className="login-button" type="button" onClick={logout}>Logout</button>
-          </nav>
-        </div>
+
+            {mainMenu.map((item) => (
+              <a key={item} href={item === 'Intake' ? '#intake' : '#'}>
+                {item}
+              </a>
+            ))}
+          </div>
+          <button className="login-button" type="button">Login</button>
+        </nav>
       </header>
 
       <main className="main-area">
         <section className="left-panel">
           {activePage === 'patient-add' ? (
-            <AddPatientPage mode="add" />
+            <AddPatientPage />
           ) : activePage === 'patient-modify' ? (
-            <AddPatientPage mode="modify" />
-          ) : activePage === 'patient-delete' ? (
-            <AddPatientPage mode="delete" />
-          ) : activePage === 'appointments-maintenance' ? (
-            <AppointmentMaintenancePage />
-          ) : activePage === 'billing-maintenance' ? (
-            <BillingMaintenancePage />
-          ) : activePage === 'admin-tenants' ? (
-            <TenantMaintenancePage />
-          ) : activePage === 'admin-tenant-locations' ? (
-            <TenantLocationMaintenancePage />
-          ) : activePage === 'admin-insurance' ? (
-            <InsuranceMaintenancePage />
-          ) : activePage === 'admin-providers' ? (
-            <ProviderMaintenancePage />
-          ) : activePage === 'admin-users' ? (
-            <UserMaintenancePage />
-          ) : activePage === 'admin-icd10' ? (
-            <Icd10MaintenancePage />
-          ) : activePage === 'admin-cpt' ? (
-            <CptMaintenancePage />
+            <article className="card patient-form-card">
+              <div className="section-head">
+                <h3>Modify Existing Patient</h3>
+                <a href="#">Search Records</a>
+              </div>
+              <p className="muted card-muted">Select a patient from records and update demographics, insurance, or contact information.</p>
+            </article>
           ) : (
             <>
               <div className="grid stats">
@@ -217,7 +217,9 @@ function App() {
                         <td>{visit.patient}</td>
                         <td>{visit.reason}</td>
                         <td>{visit.provider}</td>
-                        <td><StatusPill status={visit.status} /></td>
+                        <td>
+                          <StatusPill status={visit.status} />
+                        </td>
                       </tr>
                     ))}
                   </tbody>
